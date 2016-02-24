@@ -1,0 +1,13 @@
+/system         ext4    /dev/block/bootdevice/by-name/system
+/cache          ext4    /dev/block/bootdevice/by-name/cache        		flags=display="Cache";backup=1;wipeingui
+/config         ext4    /dev/block/bootdevice/by-name/config       		flags=display="Config";backup=1;wipeingui
+/data           ext4    /dev/block/bootdevice/by-name/data			flags=encryptable=/factory/userdata_footer
+/factory        ext4    /dev/block/bootdevice/by-name/factory      		flags=display="Factory";backup=1;wipeingui
+/boot		emmc	/dev/block/bootdevice/by-name/boot			flags=display="Boot";backup=1;wipeingui
+/recovery       emmc    /dev/block/bootdevice/by-name/recovery     		flags=display="Recovery";backup=1;wipeingui
+/fastboot       emmc    /dev/block/bootdevice/by-name/fastboot     		flags=display="Fastboot";backup=1;wipeingui
+/misc           emmc    /dev/block/bootdevice/by-name/misc         		flags=display="Misc";backup=1;wipeingui
+/ESP		vfat	/dev/block/bootdevice/by-name/ESP			flags=display="ESP";backup=1;wipeingui
+
+/external_sd    vfat    /dev/block/mmcblk1p1 	/dev/block/mmcblk1		flags=storage;removable;wipeingui
+/usb_otg        auto    /dev/block/sda1 	/dev/block/sda			flags=display="USB-OTG";storage;removable;wipeingui

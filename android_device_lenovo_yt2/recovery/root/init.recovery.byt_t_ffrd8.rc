@@ -1,0 +1,82 @@
+on early-init
+    chmod 0600 /dev/dri/controlD64
+    start thermald
+
+on init
+    # Android creates by-name disk links with the disk controller
+    # in the generated path, so that the names pulled out of the GPT
+    # can be associated with the correct disk. Create a shortcut to
+    # /dev/block/by-name so that we can use the same fstabs everywhere.
+    symlink /dev/block/platform/80860F14:00/by-name /dev/block/by-name
+
+    write /proc/sys/kernel/panic_on_oops 1
+
+    mkdir /factory 0775 system system
+    mount ext4 /dev/block/by-name/factory /factory nosuid nodev noatime barrier=1,data=ordered
+
+on firmware_mounts_complete
+    rm /dev/.booting
+
+on boot
+    trigger firmware_mounts_complete
+
+# Used to disable USB when switching states
+on property:sys.usb.config=none
+    stop adbd
+    write /sys/class/android_usb/android0/enable 0
+    write /sys/class/android_usb/android0/bDeviceClass 0
+    setprop sys.usb.state ${sys.usb.config}
+
+# adb only USB configuration
+# This should only be used during device bringup
+# and as a fallback if the USB manager fails to set a standard configuration
+on property:sys.usb.config=adb
+    stop adbd
+    write /sys/class/android_usb/android0/enable 0
+    write /sys/class/android_usb/android0/idVendor 8087
+    write /sys/class/android_usb/android0/idProduct 0a5d
+    write /sys/class/android_usb/android0/functions ${sys.usb.config}
+    write /sys/class/android_usb/android0/enable 1
+    start adbd
+    setprop sys.usb.state ${sys.usb.config}
+
+# Used to set USB configuration at boot and to switch the configuration
+# when changing the default configuration
+on property:persist.sys.usb.config=*
+    setprop sys.usb.config ${persist.sys.usb.config}
+
+# USB MTP configuration
+on property:sys.usb.config=mtp
+    stop adbd
+    write /sys/class/android_usb/android0/enable 0
+    write /sys/class/android_usb/android0/idVendor 17ef
+    write /sys/class/android_usb/android0/idProduct 795c
+    write /sys/class/android_usb/android0/functions     mtp,mass_storage
+    write /sys/class/android_usb/android0/enable 1
+    start adbd
+    setprop sys.usb.state ${sys.usb.config}
+
+# USB MTP configuration, with adb
+on property:sys.usb.config=mtp,adb
+    stop adbd
+    write /sys/class/android_usb/android0/enable 0
+    write /sys/class/android_usb/android0/idVendor 17ef
+    write /sys/class/android_usb/android0/idProduct 795f
+    write /sys/class/android_usb/android0/functions mtp,mass_storage,adb
+    write /sys/class/android_usb/android0/enable 1
+    start adbd
+    setprop sys.usb.state ${sys.usb.config}
+
+service intel_prop /sbin/intel_prop
+    oneshot
+
+service watchdogd /sbin/watchdogd 60 20
+    oneshot
+
+service thermald /sbin/thermald ROS
+    class core
+    user root
+
+# Reset the watchdog counter once boot is completed
+on property:init.svc.recovery=running
+    write /sys/devices/virtual/misc/watchdog/counter "0"
