@@ -6,10 +6,17 @@ include $(CLEAR_VARS)
 #
 
 include $(CLEAR_VARS)
-PIXELFLINGER_SRC_FILES:= \
+PIXELFLINGER_SRC_FILES += \
+    codeflinger/CodeCache.cpp \
+    format.cpp \
+    clear.cpp \
+    raster.cpp \
+    buffer.cpp
+
+ifneq ($(TARGET_ARCH),x86)
+PIXELFLINGER_SRC_FILES += \
 	codeflinger/ARMAssemblerInterface.cpp \
 	codeflinger/ARMAssemblerProxy.cpp \
-	codeflinger/CodeCache.cpp \
 	codeflinger/GGLAssembler.cpp \
 	codeflinger/load_store.cpp \
 	codeflinger/blending.cpp \
@@ -18,11 +25,8 @@ PIXELFLINGER_SRC_FILES:= \
 	picker.cpp.arm \
 	pixelflinger.cpp.arm \
 	trap.cpp.arm \
-	scanline.cpp.arm \
-	format.cpp \
-	clear.cpp \
-	raster.cpp \
-	buffer.cpp
+	scanline.cpp.arm
+endif
 
 PIXELFLINGER_CFLAGS := -fstrict-aliasing -fomit-frame-pointer
 
@@ -42,10 +46,26 @@ PIXELFLINGER_SRC_FILES_arm64 := \
 	arch-arm64/col32cb16blend.S \
 	arch-arm64/t32cb16blend.S \
 
+PIXELFLINGER_SRC_FILES_x86 := \
+	codeflinger/x86/X86Assembler.cpp \
+	codeflinger/x86/GGLX86Assembler.cpp \
+	codeflinger/x86/load_store.cpp \
+	codeflinger/x86/blending.cpp \
+	codeflinger/x86/texturing.cpp \
+	fixed.cpp \
+	picker.cpp \
+	pixelflinger.cpp \
+	trap.cpp \
+	scanline.cpp
+
 PIXELFLINGER_SRC_FILES_mips := \
 	codeflinger/MIPSAssembler.cpp \
 	codeflinger/mips_disassem.c \
 	arch-mips/t32cb16blend.S \
+
+PIXELFLINGER_C_INCLUDES_x86 := \
+	$(TARGET_OUT_HEADERS)/libenc
+PIXELFLINGER_STATIC_LIBRARIES_x86 := libenc
 
 #
 # Shared library
@@ -55,8 +75,11 @@ LOCAL_MODULE:= libpixelflinger
 LOCAL_SRC_FILES := $(PIXELFLINGER_SRC_FILES)
 LOCAL_SRC_FILES_arm := $(PIXELFLINGER_SRC_FILES_arm)
 LOCAL_SRC_FILES_arm64 := $(PIXELFLINGER_SRC_FILES_arm64)
+LOCAL_SRC_FILES_x86 := $(PIXELFLINGER_SRC_FILES_x86)
 LOCAL_SRC_FILES_mips := $(PIXELFLINGER_SRC_FILES_mips)
 LOCAL_CFLAGS := $(PIXELFLINGER_CFLAGS)
+LOCAL_C_INCLUDES_x86 := $(PIXELFLINGER_C_INCLUDES_x86)
+LOCAL_STATIC_LIBRARIES_x86 := $(PIXELFLINGER_STATIC_LIBRARIES_x86)
 LOCAL_SHARED_LIBRARIES := libcutils liblog libutils
 LOCAL_C_INCLUDES += external/safe-iop/include
 
@@ -77,8 +100,11 @@ LOCAL_MODULE:= libpixelflinger_static
 LOCAL_SRC_FILES := $(PIXELFLINGER_SRC_FILES)
 LOCAL_SRC_FILES_arm := $(PIXELFLINGER_SRC_FILES_arm)
 LOCAL_SRC_FILES_arm64 := $(PIXELFLINGER_SRC_FILES_arm64)
+LOCAL_SRC_FILES_x86 := $(PIXELFLINGER_SRC_FILES_x86)
 LOCAL_SRC_FILES_mips := $(PIXELFLINGER_SRC_FILES_mips)
 LOCAL_CFLAGS := $(PIXELFLINGER_CFLAGS)
+LOCAL_C_INCLUDES_x86 := $(PIXELFLINGER_C_INCLUDES_x86)
+LOCAL_STATIC_LIBRARIES_x86 := $(PIXELFLINGER_STATIC_LIBRARIES_x86)
 include $(BUILD_STATIC_LIBRARY)
 
 
